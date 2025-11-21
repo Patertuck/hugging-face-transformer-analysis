@@ -71,7 +71,37 @@ Overall, keyword detection is simple and scalable but should be interpreted caut
 ...
 
 ## Task 3: Coupling Analysis
-...
+
+### Initial analysis
+
+The commit history since 2023 was extracted using the following command:
+```
+git log --since="2023-01-01" --name-only --pretty=format:"%H" > commit_files.txt
+```
+
+The top 10 most frequently co-changed file pairs are:
+```
+('src/transformers/models/auto/configuration_auto.py', 'src/transformers/models/auto/modeling_auto.py') 229
+('src/transformers/models/__init__.py', 'src/transformers/models/auto/configuration_auto.py') 209
+('docs/source/en/_toctree.yml', 'src/transformers/models/auto/configuration_auto.py') 204
+('src/transformers/models/__init__.py', 'src/transformers/models/auto/modeling_auto.py') 200
+('src/transformers/__init__.py', 'src/transformers/utils/dummy_pt_objects.py') 196
+('docs/source/en/_toctree.yml', 'src/transformers/models/__init__.py') 189
+('docs/source/en/_toctree.yml', 'src/transformers/models/auto/modeling_auto.py') 189
+('src/transformers/__init__.py', 'src/transformers/models/auto/modeling_auto.py') 183
+('src/transformers/__init__.py', 'src/transformers/models/__init__.py') 170
+('docs/source/en/_toctree.yml', 'src/transformers/__init__.py') 168
+```
+
+The graph visualization of these top pairs is shown below:
+
+![alt text](figures/figure3.1.png)
+
+The most tightly coupled pair is:
+```
+('src/transformers/models/auto/configuration_auto.py', 'src/transformers/models/auto/modeling_auto.py') 229
+```
+> They are tightly coupled because any update to a configuration typically requires a corresponding change in the auto-model loader. Many commits modify both files together to maintain consistency. This logical coupling reflects functional dependency and co-evolution of related components rather than poor modularity, and it is expected for the auto functionality to work correctly.
 
 
 ## Usage of AI
