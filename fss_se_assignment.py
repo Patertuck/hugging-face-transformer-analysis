@@ -2,8 +2,8 @@ import re
 from collections import Counter, defaultdict
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 import matplotlib
+matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
-matplotlib.use("TkAgg")
 
 STOPWORDS = set(ENGLISH_STOP_WORDS)
 FILEPATH = "commits_after_2023.txt"

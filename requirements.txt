@@ -22,6 +22,7 @@ pluggy==1.6.0
 psutil==7.1.3
 Pygments==2.19.2
 pynguin==0.44.0
+PyQt5==5.15.11
 pytest==8.4.2
 pytokens==0.3.0
 PyYAML==6.0.3
