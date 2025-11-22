@@ -104,6 +104,7 @@ They are tightly coupled because any update to a configuration typically require
 ### Test seperated analysis
 
 To further investigate logical coupling within the Transformers repository, we repeated the coupling analysis while restricting file pairs to those where one file is a Python test file and the other is a Python source file. The goal was to understand how often tests and their corresponding implementation files evolve together.
+
 The resulting top 10 coupled test–source pairs are shown in the ouput log below.
 ```
 ('src/transformers/generation/utils.py', 'tests/generation/test_utils.py') 122
@@ -117,11 +118,23 @@ The resulting top 10 coupled test–source pairs are shown in the ouput log belo
 ('src/transformers/__init__.py', 'src/transformers/testing_utils.py') 35
 ('src/transformers/models/llama/modeling_llama.py', 'tests/test_modeling_common.py') 33
 ```
-The strong coupling between test files and their corresponding source files is normal and reflects the way tests evolve together with the code they verify. This pattern generally indicates healthy maintenance rather than a structural problem. It becomes concerning only when a single test file frequently changes alongside many unrelated source files, which can suggest overly broad tests or weak isolation. In the results observed here, the relationships are focused and consistent, so the coupling appears natural and not a sign of needed refactoring.
+
+These top pairs can be visualized using the networkx graph visualization library and result in the following graph network below.
+
+![alt text](figures/figure3.2.png)
+
+
+Further as tasked the topmost tightly coupled pair was selected as the following shown below.
+```
+('src/transformers/generation/utils.py', 'tests/generation/test_utils.py') 122
+```
+The pair with 122 shared commits shows a very strong relationship, and this level of coupling is natural given their roles. The file `src/transformers/generation/utils.py` provides core utilities for the generation pipeline, while `tests/generation/test_utils.py` contains the tests that verify the correctness of those utilities. Because the test file is designed specifically for this module, both files evolve together whenever new generation features are introduced, bugs are fixed, or existing behavior is adjusted. This consistent co-evolution reflects healthy development rather than a structural issue and indicates that the project maintains good test coverage and clear alignment between tests and implementation. The shared location within the same functional area further supports their close relationship and reinforces that this coupling is intentional and beneficial.
+
+> To answer the specific question to this task, the strong coupling between test files and their corresponding source files is normal and reflects the way tests evolve together with the code they verify. This pattern generally indicates healthy maintenance rather than a structural problem. It becomes concerning only when a single test file frequently changes alongside many unrelated source files, which can suggest overly broad tests or weak isolation. In the results observed here, the relationships are focused and consistent, so the coupling appears natural and not a sign of needed refactoring.
 
 ### Pynguin test generation
 
-...
+To determine where Pynguin should place automatically generated tests, we can rely on several ways of identifying the test file that is most closely connected to a given source file. One approach is to analyze commit history and select the test file that has most often changed together with the source file, since frequent co-evolution suggests a strong relationship. Another option is to compare names and directory structures by choosing the test file whose naming pattern or location matches the structure of the target module. A further method is to examine existing test imports and static usage patterns to find which test file currently exercises or references the source file. Additional strategies such as analyzing dependency graphs or evaluating directory proximity could also support this decision.
 
 ### Test placement methods
 

@@ -7,8 +7,8 @@ import os
 COMMIT_FILE = "commit_files_since_2023.txt"
 TOP_N_PAIRS = 10
 COMMIT_HASH_LENGTH = 40
-NODE_SIZE = 2000
-FONT_SIZE = 10
+NODE_SIZE = 250
+FONT_SIZE = 5
 
 def initial_analyze_coupling(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
     with open(filepath, "r") as f:
@@ -78,6 +78,32 @@ def analyze_test_separated(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
     for (f1, f2), count in top_pairs:
         print((f1, f2), count)
 
+    G = nx.Graph()
+    for (f1, f2), weight in top_pairs:
+        G.add_edge(f1, f2, weight=weight)
+
+    pos = nx.spring_layout(G)
+    nx.draw(G, pos, with_labels=True, node_size=NODE_SIZE, font_size=FONT_SIZE)
+    plt.show()
+
+def name_based_placement(target_file, test_dir="tests"):
+    base = os.path.basename(target_file).replace(".py", "")
+    candidates = [f for f in os.listdir(test_dir) if f.endswith(".py")]
+    for test_file in candidates:
+        if base in test_file:
+            return os.path.join(test_dir, test_file)
+    return None
+
+def commit_based_placement(target_file, commit_pairs, test_files):
+    coupling_scores = defaultdict(int)
+    for (f1, f2), count in commit_pairs.items():
+        if target_file in (f1, f2):
+            other = f2 if f1 == target_file else f1
+            if other in test_files:
+                coupling_scores[other] += count
+    if not coupling_scores:
+        return None
+    return max(coupling_scores, key=coupling_scores.get)
 
 if __name__ == "__main__":
     # initial_analyze_coupling()
