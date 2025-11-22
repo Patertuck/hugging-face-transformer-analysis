@@ -35,7 +35,7 @@ These keywords were then used throughout the analysis to classify and count defe
 Using these keywords and the parsed commit metadata, the total number of defect commits per month was computed and visualized.  
 This figure shows the defect commit distribution across months:
 
-![alt defects per month whole repo](plots/defects_per_month_whole_repo.png)
+![alt defects per month whole repo](figures/defects_per_month_whole_repo.png)
 
 A clear drop in defect-related commits appears in **October 2025**.
 This reduction is plausibly explained by the release of **[Transformers v4.57.0](https://github.com/huggingface/transformers/releases/tag/v4.57.0)** on **October 3, 2025**.
@@ -45,7 +45,7 @@ Because the release occurred early in the month, only a small number of days rem
 A further analysis was conducted to identify which files accumulated the highest number of defect commits.  
 The two files with the most defect-related commits were isolated, and their defect counts were plotted over time.
 
-![alt defects per month per file top 2](plots/defects_per_month_per_file_top_2.png)
+![alt defects per month per file top 2](figures/defects_per_month_per_file_top_2.png)
 
 The spike in defect-related commits in March 2025 for `modeling_utils.py` was, upon closer analysis, caused by a major refactor of `from_pretrained()`. Since `from_pretrained()` is the central mechanism for instantiating models from checkpoints, many architectures depend on its behavior. Updating this core function therefore required numerous downstream adjustments, resulting in a large number of follow-up fixes.
 
