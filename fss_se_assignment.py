@@ -2,12 +2,14 @@ import re
 from collections import Counter, defaultdict
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 import matplotlib
+
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 
 STOPWORDS = set(ENGLISH_STOP_WORDS)
 FILEPATH = "commits_after_2023.txt"
 COMMIT_LINE = re.compile(r"^[0-9a-f]{40}\t")
+
 
 def pretty_print_keywords(counts):
     print("\n=== Top Keywords in Commit Messages ===")
@@ -88,6 +90,7 @@ def plot_defects_per_month(defects_per_month):
     plt.tight_layout()
     plt.show()
 
+
 def count_defects_per_file_per_month(filepath, defect_keywords):
     file_defect_counts = Counter()
     per_file_month_counts = defaultdict(Counter)
@@ -124,6 +127,7 @@ def count_defects_per_file_per_month(filepath, defect_keywords):
 
     return file_defect_counts, per_file_month_counts
 
+
 def plot_top2_files_defects_per_month(filepath, defect_keywords):
     file_defect_counts, per_file_month_counts = count_defects_per_file_per_month(
         filepath, defect_keywords
@@ -158,11 +162,9 @@ def plot_top2_files_defects_per_month(filepath, defect_keywords):
     plt.show()
 
 
-
-
 if __name__ == "__main__":
     analyse_for_keywords()
-    defect_keywords = {"fix", "error", "bug", "issue"} # Identified because of the analysis above
+    defect_keywords = {"fix", "error", "bug", "issue"}  # Identified because of the analysis above
 
     defects = count_defects_per_month(FILEPATH, defect_keywords)
     plot_defects_per_month(defects)
