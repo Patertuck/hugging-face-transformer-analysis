@@ -7,7 +7,10 @@
 - Patric Brandao 21-534-607
 - Noah Mattia Bussinger 22-700-835
 
+---
+
 ## Task 1: Defect Analysis
+
 To analyse defect-related commits in the Hugging Face Transformers repository, a dataset file (`commits_after_2023.txt`) was generated using a git log query. The commit range was restricted to dates after January 2023 and the release of **[Transformers v4.57.0](https://github.com/huggingface/transformers/releases/tag/v4.57.0)**, both to reduce computation time and to focus the analysis on the most recent phase of project evolution (as of time of analysis).
 
 ```bash
@@ -77,10 +80,9 @@ In this task, we analysed complexity using two metrics:
 Each metric highlights different types of hotspots.  
 Below, we analyse them separately and compare them at the end.
 
+### NCC Complexity Analysis
 
-## NCC Complexity Analysis
-
-### NCC Top 20
+#### NCC Top 20
 
 ![alt defects per month per file top 2](figures/NCC_top_20.png)
 A ranked horizontal bar chart was used here because it makes comparative frequency immediately visible and allows high-churn files to stand out clearly. This type of chart is effective for hotspot analysis, where the goal is to identify which files dominate change activity.
@@ -92,25 +94,21 @@ The top 20 most frequently changed Python files can be grouped into several clea
   Because many architectures depend on these shared components, even small changes can propagate widely, leading to frequent follow-up updates.  
   `modeling_utils.py`, `trainer.py`, `generation/utils.py`
 
-
 - **Auto-model system:**  
   Responsible for mapping model names to their configuration and implementation classes.  
   Updated often as new architectures are introduced.  
   `modeling_auto.py`, `configuration_auto.py`
-
 
 - **Initialization and API plumbing:**  
   Files managing imports, lazy loading, and dependency handling.  
   Touched frequently when extending or reorganizing the public API.  
   `__init__.py`, `dummy_pt_objects.py`
 
-
 - **High-churn tests:**  
   Test modules that evolve together with major components, reflecting co-evolution rather than design issues.  
   `test_modeling_common.py`, `test_utils.py`, `test_trainer.py`
 
-
-### NCC per month for top 5 files
+#### NCC per month for top 5 files
 
 ![alt defects per month per file top 2](figures/NCC_per_month_top_5.png)
 
@@ -118,9 +116,9 @@ The monthly NCC line plot shows that these hotspot files remain active throughou
 Such spikes typically correspond to larger refactors or architectural changes (e.g., updates to `from_pretrained()` or the Trainer/Accelerate integration), as already analysed in task 1.  
 The sustained activity indicates that these modules act as evolution bottlenecks and represent areas where future changes may carry higher maintenance risk.
 
-## SLoC Complexity Analysis
+### SLoC Complexity Analysis
 
-### SLoC Hotspots (Structural Code Volume)
+#### SLoC Hotspots (Structural Code Volume)
 
 ![alt defects per month per file top 2](figures/SLoC_with_LoC_Background_top_25.png)
 
@@ -149,9 +147,7 @@ Using SLoC as the primary metric reveals a clear set of hotspot file types:
 Overall, the Top-25 SLoC results show a highly skewed distribution: although most files are relatively small, a small subset contains the majority of the core implementation logic.  
 These are the files where structural complexity is concentrated and where targeted testing, documentation, or modularization efforts would have the highest impact.
 
----
-
-## Correlation Between NCC and SLoC
+### Correlation Between NCC and SLoC
 
 Comparing the two complexity measures reveals that **NCC and SLoC correlate only weakly in the Transformers repository**. While a small number of files appear as hotspots in both metrics, the overall pattern shows that each captures a different aspect of complexity.
 
@@ -184,11 +180,13 @@ Because these two perspectives capture different forms of complexity, they compl
 ### Initial analysis
 
 To analyse logical coupling in the Hugging Face Transformers repository, a dataset file (`commit_files_since_2023.txt`) was generated using a git log query. The commit range was restricted to dates after January 2023 and the release of **[Transformers v4.57.0](https://github.com/huggingface/transformers/releases/tag/v4.57.0)**, both to reduce computation time and to focus the analysis on the most recent phase of project evolution (as of time of analysis).
+
 ```bash
 git log --since="2023-01-01" --name-only --pretty=format:"%H" > commit_files_since_2023.txt
 ```
 
 The resulting top 10 most frequently co-changed file pairs are shown in the ouput log below.
+
 ```
 ('src/transformers/models/auto/configuration_auto.py', 'src/transformers/models/auto/modeling_auto.py') 229
 ('src/transformers/models/__init__.py', 'src/transformers/models/auto/configuration_auto.py') 209
@@ -207,9 +205,11 @@ These top pairs can be visualized using the networkx graph visualization library
 ![alt text](figures/figure3.1.png)
 
 Further as tasked the topmost tightly coupled pair was selected as the following shown below. 
+
 ```
 ('src/transformers/models/auto/configuration_auto.py', 'src/transformers/models/auto/modeling_auto.py') 229
 ```
+
 They are tightly coupled because any update to a configuration typically requires a corresponding change in the auto-model loader. Many commits modify both files together to maintain consistency. This logical coupling reflects functional dependency and co-evolution of related components rather than poor modularity, and it is expected for the auto functionality to work correctly.
 
 ### Test seperated analysis
@@ -217,6 +217,7 @@ They are tightly coupled because any update to a configuration typically require
 To further investigate logical coupling within the Transformers repository, we repeated the coupling analysis while restricting file pairs to those where one file is a Python test file and the other is a Python source file. The goal was to understand how often tests and their corresponding implementation files evolve together.
 
 The resulting top 10 coupled test–source pairs are shown in the ouput log below.
+
 ```
 ('src/transformers/generation/utils.py', 'tests/generation/test_utils.py') 122
 ('src/transformers/trainer.py', 'tests/trainer/test_trainer.py') 74
@@ -236,9 +237,11 @@ These top pairs can be visualized using the networkx graph visualization library
 
 
 Further as tasked the topmost tightly coupled pair was selected as the following shown below.
+
 ```
 ('src/transformers/generation/utils.py', 'tests/generation/test_utils.py') 122
 ```
+
 The pair with 122 shared commits shows a very strong relationship, and this level of coupling is natural given their roles. The file `src/transformers/generation/utils.py` provides core utilities for the generation pipeline, while `tests/generation/test_utils.py` contains the tests that verify the correctness of those utilities. Because the test file is designed specifically for this module, both files evolve together whenever new generation features are introduced, bugs are fixed, or existing behavior is adjusted. This consistent co-evolution reflects healthy development rather than a structural issue and indicates that the project maintains good test coverage and clear alignment between tests and implementation. The shared location within the same functional area further supports their close relationship and reinforces that this coupling is intentional and beneficial.
 
 > To answer the specific question to this task, the strong coupling between test files and their corresponding source files is normal and reflects the way tests evolve together with the code they verify. This pattern generally indicates healthy maintenance rather than a structural problem. It becomes concerning only when a single test file frequently changes alongside many unrelated source files, which can suggest overly broad tests or weak isolation. In the results observed here, the relationships are focused and consistent, so the coupling appears natural and not a sign of needed refactoring.
@@ -282,6 +285,8 @@ This method uses Git history to determine which test file is most often committe
 > The method would therefore place `src/transformers/generation/utils.py` to `tests/test_generation.py`.
 
 This result is also reasonable. Historically, multiple generation-related utilities and helper functions in the Transformers project are exercised in combined test modules. The broader test file is likely frequently updated alongside changes to `generation/utils.py`. This indicates that the generation utilities influence multiple parts of the generation pipeline. Also tests for multiple related components may live in a shared test module. Name-based and commit-based methods may disagree, but both choices are valid depending on desired granularity.
+
+---
 
 ## Usage of AI
 
