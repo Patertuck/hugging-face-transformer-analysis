@@ -4,13 +4,15 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import os
 
+
 COMMIT_FILE = "commit_files_since_2023.txt"
 TOP_N_PAIRS = 10
 COMMIT_HASH_LENGTH = 40
 NODE_SIZE = 250
 FONT_SIZE = 5
 
-def initial_analyze_coupling(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
+
+def initial_analyze_coupling(filepath, top_n):
     with open(filepath, "r") as f:
         lines = [line.strip() for line in f if line.strip()]
 
@@ -44,7 +46,8 @@ def initial_analyze_coupling(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
     nx.draw(G, pos, with_labels=True, node_size=NODE_SIZE, font_size=FONT_SIZE)
     plt.show()
 
-def analyze_test_separated(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
+
+def analyze_test_separated(filepath, top_n):
     with open(filepath, "r") as f:
         lines = [line.strip() for line in f if line.strip()]
 
@@ -86,7 +89,8 @@ def analyze_test_separated(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
     nx.draw(G, pos, with_labels=True, node_size=NODE_SIZE, font_size=FONT_SIZE)
     plt.show()
 
-def test_placement_methods(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
+
+def test_placement_methods(filepath):
     with open(filepath, "r") as f:
         lines = [line.strip() for line in f if line.strip()]
 
@@ -154,7 +158,8 @@ def test_placement_methods(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
     cb = commit_based_placement(target, pair_counts, commit_files)
     print("commit_based_placement: ", cb)
 
+
 if __name__ == "__main__":
-    # initial_analyze_coupling()
-    # analyze_test_separated()
-    test_placement_methods()
+    initial_analyze_coupling(COMMIT_FILE, TOP_N_PAIRS)
+    analyze_test_separated(COMMIT_FILE, TOP_N_PAIRS)
+    test_placement_methods(COMMIT_FILE)
