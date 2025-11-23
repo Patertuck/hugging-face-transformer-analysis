@@ -1,10 +1,14 @@
 import re
+import os
 from collections import Counter, defaultdict
 import matplotlib
+
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 
 FILEPATH = "commits_after_2023.txt"
+LOC_SLOC_INPUT_FILE = "loc_sloc_src.txt"
+
 
 COMMIT_LINE = re.compile(r"^[0-9a-f]{40}\t")
 
@@ -97,6 +101,59 @@ def anaylze_NCC():
     plot_top_ncc_files_per_month(ncc_counts, per_file_month_counts, 5)
 
 
+
+def read_loc_file(path):
+    rows = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            parts = [p.strip() for p in line.split("|")]
+            if len(parts) < 3:
+                continue
+            try:
+                loc = int(parts[0])
+                sloc = int(parts[1])
+                file_path = parts[2]
+            except ValueError:
+                continue
+
+            dir_path = os.path.dirname(file_path)
+            rows.append({
+                "loc": loc,
+                "sloc": sloc,
+                "file": file_path,
+                "dir": dir_path
+            })
+    return rows
+
+
+def plot_top_files(rows, top_n):
+    rows_sorted = sorted(rows, key=lambda r: r["sloc"], reverse=True)[:top_n]
+
+    files = [r["file"] for r in rows_sorted][::-1]
+    slocs = [r["sloc"] for r in rows_sorted][::-1]
+    locs = [r["loc"] for r in rows_sorted][::-1]
+
+    plt.figure(figsize=(12, 7))
+
+    plt.barh(files, locs, label="LoC (total)", color="#d0d0d0", alpha=0.6)
+
+    plt.barh(files, slocs, label="SLoC (source)", color="#2ca02c", alpha=0.9)
+
+    plt.xlabel("Lines")
+    plt.title(f"Top {top_n} Python Files by SLoC (with LoC Background)")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def analyze_SLoC_LoC():
+    rows = read_loc_file(LOC_SLOC_INPUT_FILE)
+    plot_top_files(rows, 25)
+
+
 if __name__ == "__main__":
     anaylze_NCC()
-
+    analyze_SLoC_LoC()

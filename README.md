@@ -8,7 +8,7 @@
 - Noah Mattia Bussinger 22-700-835
 
 ## Task 1: Defect Analysis
-To analyze defect-related commits in the Hugging Face Transformers repository, a dataset file (`commits_after_2023.txt`) was generated using a git log query. The commit range was restricted to dates after January 2023 and the release of **[Transformers v4.57.0](https://github.com/huggingface/transformers/releases/tag/v4.57.0)**, both to reduce computation time and to focus the analysis on the most recent phase of project evolution (as of time of analysis).
+To analyse defect-related commits in the Hugging Face Transformers repository, a dataset file (`commits_after_2023.txt`) was generated using a git log query. The commit range was restricted to dates after January 2023 and the release of **[Transformers v4.57.0](https://github.com/huggingface/transformers/releases/tag/v4.57.0)**, both to reduce computation time and to focus the analysis on the most recent phase of project evolution (as of time of analysis).
 
 ```bash
 git log --since="2023-01-01" \
@@ -65,14 +65,125 @@ This keyword-based approach provides a rough estimate of defect activity but has
 
 Overall, keyword detection is simple and scalable but should be interpreted cautiously and supplemented with more detailed analysis.
 
+---
+
 ## Task 2: Complexity Analysis
-...
+
+In this task, we analysed complexity using two metrics:
+
+- **NCC (Number of Code Changes)**: An evolutionary complexity measure capturing how often files are modified.
+- **SLoC (Source Lines of Code)**: A structural complexity measure capturing how much executable code a file contains.
+
+Each metric highlights different types of hotspots.  
+Below, we analyse them separately and compare them at the end.
+
+
+## NCC Complexity Analysis
+
+### NCC Top 20
+
+![alt defects per month per file top 2](figures/NCC_top_20.png)
+A ranked horizontal bar chart was used here because it makes comparative frequency immediately visible and allows high-churn files to stand out clearly. This type of chart is effective for hotspot analysis, where the goal is to identify which files dominate change activity.
+
+The top 20 most frequently changed Python files can be grouped into several clear categories:
+
+- **Core infrastructure:**  
+  Modules that implement the fundamental mechanisms for model execution, training, and text generation.  
+  Because many architectures depend on these shared components, even small changes can propagate widely, leading to frequent follow-up updates.  
+  `modeling_utils.py`, `trainer.py`, `generation/utils.py`
+
+
+- **Auto-model system:**  
+  Responsible for mapping model names to their configuration and implementation classes.  
+  Updated often as new architectures are introduced.  
+  `modeling_auto.py`, `configuration_auto.py`
+
+
+- **Initialization and API plumbing:**  
+  Files managing imports, lazy loading, and dependency handling.  
+  Touched frequently when extending or reorganizing the public API.  
+  `__init__.py`, `dummy_pt_objects.py`
+
+
+- **High-churn tests:**  
+  Test modules that evolve together with major components, reflecting co-evolution rather than design issues.  
+  `test_modeling_common.py`, `test_utils.py`, `test_trainer.py`
+
+
+### NCC per month for top 5 files
+
+![alt defects per month per file top 2](figures/NCC_per_month_top_5.png)
+
+The monthly NCC line plot shows that these hotspot files remain active throughout the observed period, with several noticeable spikes.  
+Such spikes typically correspond to larger refactors or architectural changes (e.g., updates to `from_pretrained()` or the Trainer/Accelerate integration), as already analysed in task 1.  
+The sustained activity indicates that these modules act as evolution bottlenecks and represent areas where future changes may carry higher maintenance risk.
+
+## SLoC Complexity Analysis
+
+### SLoC Hotspots (Structural Code Volume)
+
+![alt defects per month per file top 2](figures/SLoC_with_LoC_Background_top_25.png)
+
+The SLoC visualization highlights an important issue with using raw LoC (Lines of Code) as a complexity metric.
+As seen in the chart, the total LoC (shown in gray) includes varying amounts of comments, docstrings, and empty lines, which artificially inflate the perceived size and complexity of many files.
+To make this distortion visible, a ranked horizontal bar chart was used with LoC as a light background and SLoC as the foreground.
+This layout clearly shows how raw LoC can exaggerate complexity and why SLoC provides a more meaningful measure.
+
+By contrast, SLoC isolates only the executable lines of code, offering a clearer picture of true implementation complexity.
+This makes SLoC a more reliable basis for identifying structural hotspots, since it reflects the actual logic a developer must understand or modify.
+
+Using SLoC as the primary metric reveals a clear set of hotspot file types:
+
+- **Large core abstractions:**  
+  Files such as `trainer.py` and `modeling_utils.py` contain the core mechanisms for training, model loading, and parameter handling.
+  Because many components depend on these abstractions, they accumulate significant executable logic and naturally stand out as SLoC-heavy.
+
+- **Generation and tokenization utilities:**  
+  Modules like `generation/utils.py` and `tokenization_utils_base.py` provide essential building blocks for text generation and text processing.
+  Their broad applicability across many model architectures leads to dense implementations with many interrelated functions.
+
+- **Model-specific implementations:**  
+  Architectures such as Qwen, Seamless-M4T, and LLaMA contribute large modeling files with thousands of lines of code. 
+  They are structurally large even if they do not change frequently.
+
+Overall, the Top-25 SLoC results show a highly skewed distribution: although most files are relatively small, a small subset contains the majority of the core implementation logic.  
+These are the files where structural complexity is concentrated and where targeted testing, documentation, or modularization efforts would have the highest impact.
+
+---
+
+## Correlation Between NCC and SLoC
+
+Comparing the two complexity measures reveals that **NCC and SLoC correlate only weakly in the Transformers repository**. While a small number of files appear as hotspots in both metrics, the overall pattern shows that each captures a different aspect of complexity.
+
+Several observations support this conclusion:
+
+- **Overlap exists but is limited.**  
+  Files such as `trainer.py`, `modeling_utils.py`, and `generation/utils.py` rank highly in both NCC and SLoC.
+  These are large, central abstractions that both contain substantial logic and undergo frequent modification.
+  However, these overlapping cases represent only a small portion of the overall dataset.
+
+- **Many large files do not change often.**  
+  The SLoC hotspots include a number of *model-specific* implementation files (e.g., Qwen, Seamless-M4T, LLaMA).
+  These files are structurally large but relatively stable once introduced, meaning their SLoC is high but their NCC remains low.
+  This weakens the overall correlation between the two measures.
+
+- **Many frequently changed files are small.**  
+  Files like `__init__.py`, `dummy_pt_objects.py`, or auto-model registration modules appear often in NCC rankings despite having low SLoC.
+  Their high churn is driven by architectural integration rather than code volume, further decoupling NCC from SLoC.
+
+**Conclusion:**  
+In this repository, files with more executable code do not necessarily change more often, and files that change frequently are not necessarily large.
+NCC highlights evolutionary hotspots, meaning files that are frequently touched because they connect different parts of the architecture.
+SLoC highlights structural hotspots, meaning files that contain large amounts of actual implementation logic.
+Because these two perspectives capture different forms of complexity, they complement one another but should not be treated as interchangeable measures.
+
+---
 
 ## Task 3: Coupling Analysis
 
 ### Initial analysis
 
-To analyze logical coupling in the Hugging Face Transformers repository, a dataset file (`commit_files_since_2023.txt`) was generated using a git log query. The commit range was restricted to dates after January 2023 and the release of **[Transformers v4.57.0](https://github.com/huggingface/transformers/releases/tag/v4.57.0)**, both to reduce computation time and to focus the analysis on the most recent phase of project evolution (as of time of analysis).
+To analyse logical coupling in the Hugging Face Transformers repository, a dataset file (`commit_files_since_2023.txt`) was generated using a git log query. The commit range was restricted to dates after January 2023 and the release of **[Transformers v4.57.0](https://github.com/huggingface/transformers/releases/tag/v4.57.0)**, both to reduce computation time and to focus the analysis on the most recent phase of project evolution (as of time of analysis).
 ```bash
 git log --since="2023-01-01" --name-only --pretty=format:"%H" > commit_files_since_2023.txt
 ```
@@ -134,7 +245,7 @@ The pair with 122 shared commits shows a very strong relationship, and this leve
 
 ### Pynguin test generation
 
-To determine where Pynguin should place automatically generated tests, we can rely on several ways of identifying the test file that is most closely connected to a given source file. One approach is to analyze commit history and select the test file that has most often changed together with the source file, since frequent co-evolution suggests a strong relationship. Another option is to compare names and directory structures by choosing the test file whose naming pattern or location matches the structure of the target module. A further method is to examine existing test imports and static usage patterns to find which test file currently exercises or references the source file. Additional strategies such as analyzing dependency graphs or evaluating directory proximity could also support this decision.
+To determine where Pynguin should place automatically generated tests, we can rely on several ways of identifying the test file that is most closely connected to a given source file. One approach is to analyse commit history and select the test file that has most often changed together with the source file, since frequent co-evolution suggests a strong relationship. Another option is to compare names and directory structures by choosing the test file whose naming pattern or location matches the structure of the target module. A further method is to examine existing test imports and static usage patterns to find which test file currently exercises or references the source file. Additional strategies such as analyzing dependency graphs or evaluating directory proximity could also support this decision.
 
 ### Test placement methods
 
