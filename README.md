@@ -245,11 +245,43 @@ The pair with 122 shared commits shows a very strong relationship, and this leve
 
 ### Pynguin test generation
 
-To determine where Pynguin should place automatically generated tests, we can rely on several ways of identifying the test file that is most closely connected to a given source file. One approach is to analyse commit history and select the test file that has most often changed together with the source file, since frequent co-evolution suggests a strong relationship. Another option is to compare names and directory structures by choosing the test file whose naming pattern or location matches the structure of the target module. A further method is to examine existing test imports and static usage patterns to find which test file currently exercises or references the source file. Additional strategies such as analyzing dependency graphs or evaluating directory proximity could also support this decision.
+To determine where Pynguin should place automatically generated tests, we can rely on several ways of identifying the test file that is most closely connected to a given source file. 
+
+- One approach is to analyze **commit history** and select the test file that has most often changed together with the source file, since frequent co-evolution suggests a strong relationship. 
+- Another option is to compare **names and directory structures** by choosing the test file whose naming pattern or location matches the structure of the target module. 
+- A further method is to examine existing test **imports and static usage patterns** to find which test file currently exercises or references the source file. 
+
+Additional strategies such as analyzing dependency graphs or evaluating directory proximity could also support this decision.
 
 ### Test placement methods
 
-...
+Several strategies for determining which test file is most closely related to a given non-test .py file were proposed. For this sub task, two of these methods were implemented:
+
+#### Method 1: Name-Based Test File Matching
+
+This approach selects the test file whose name most closely matches the non-test file’s name. It mimics standard project conventions such as appending `test_`.
+
+- Extract the base name of the input file.
+- Search the `tests` directory for test files containing the base name.
+- If no strict match is found, fall back to partial matches.
+- Return the most likely match, or None if no match is found.
+
+> The method would therefore place `src/transformers/generation/utils.py` to `tests/test_generation_utils.py`.
+
+This is expected because the naming pattern directly mirrors the structure of the source file. The name-based approach is deterministic and works well in repositories that follow naming conventions strictly.
+
+#### Method 2: Commit-Based Logical Coupling
+
+This method uses Git history to determine which test file is most often committed together with the target Python file. The intuition is that files that change together over time are likely logically related.
+
+- Parse historical commits and reconstruct file co-occurrences.
+- Identify all commits involving the target file.
+- Among all associated files, filter only Python test files.
+- Select the test file with the highest co-occurrence count.
+
+> The method would therefore place `src/transformers/generation/utils.py` to `tests/test_generation.py`.
+
+This result is also reasonable. Historically, multiple generation-related utilities and helper functions in the Transformers project are exercised in combined test modules. The broader test file is likely frequently updated alongside changes to `generation/utils.py`. This indicates that the generation utilities influence multiple parts of the generation pipeline. Also tests for multiple related components may live in a shared test module. Name-based and commit-based methods may disagree, but both choices are valid depending on desired granularity.
 
 ## Usage of AI
 

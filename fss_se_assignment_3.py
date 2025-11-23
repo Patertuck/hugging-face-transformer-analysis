@@ -86,25 +86,75 @@ def analyze_test_separated(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
     nx.draw(G, pos, with_labels=True, node_size=NODE_SIZE, font_size=FONT_SIZE)
     plt.show()
 
-def name_based_placement(target_file, test_dir="tests"):
-    base = os.path.basename(target_file).replace(".py", "")
-    candidates = [f for f in os.listdir(test_dir) if f.endswith(".py")]
-    for test_file in candidates:
-        if base in test_file:
-            return os.path.join(test_dir, test_file)
-    return None
+def test_placement_methods(filepath=COMMIT_FILE, top_n=TOP_N_PAIRS):
+    with open(filepath, "r") as f:
+        lines = [line.strip() for line in f if line.strip()]
 
-def commit_based_placement(target_file, commit_pairs, test_files):
-    coupling_scores = defaultdict(int)
-    for (f1, f2), count in commit_pairs.items():
-        if target_file in (f1, f2):
-            other = f2 if f1 == target_file else f1
-            if other in test_files:
-                coupling_scores[other] += count
-    if not coupling_scores:
+    commits = []
+    current_commit = []
+    for line in lines:
+        if len(line) == COMMIT_HASH_LENGTH:
+            if current_commit:
+                commits.append(current_commit)
+            current_commit = []
+        else:
+            current_commit.append(line)
+    if current_commit:
+        commits.append(current_commit)
+
+    def is_test_file(file_path):
+        return os.path.basename(file_path).startswith("test") and file_path.endswith(".py")
+
+    def is_python_file(file_path):
+        return file_path.endswith(".py")
+
+    pair_counts = defaultdict(int)
+    for commit in commits:
+        py_files = [f for f in commit if is_python_file(f)]
+        for f1, f2 in combinations(sorted(set(py_files)), 2):
+            if (is_test_file(f1) and not is_test_file(f2)) or (is_test_file(f2) and not is_test_file(f1)):
+                pair_counts[(f1, f2)] += 1
+
+    commit_files = {"tests": set(), "python": set()}
+
+    for (f1, f2) in pair_counts:
+        if is_python_file(f1):
+            commit_files["python"].add(f1)
+            if is_test_file(f1):
+                commit_files["tests"].add(f1)
+        if is_python_file(f2):
+            commit_files["python"].add(f2)
+            if is_test_file(f2):
+                commit_files["tests"].add(f2)
+
+    def name_based_placement(target_file, test_dir="tests"):
+        base = os.path.basename(target_file).replace(".py", "")
+        candidates = [f for f in os.listdir(test_dir) if f.endswith(".py")]
+        for test_file in candidates:
+            if base in test_file:
+                return os.path.join(test_dir, test_file)
         return None
-    return max(coupling_scores, key=coupling_scores.get)
+
+    def commit_based_placement(target_file, commit_pairs, test_files):
+        coupling_scores = defaultdict(int)
+        for (f1, f2), count in commit_pairs.items():
+            if target_file in (f1, f2):
+                other = f2 if f1 == target_file else f1
+                if other in test_files:
+                    coupling_scores[other] += count
+        if not coupling_scores:
+            return None
+        return max(coupling_scores, key=coupling_scores.get)
+
+    target = "src/transformers/generation/utils.py"
+
+    nb = name_based_placement(target)
+    print("name_based_placement: ", nb)
+
+    cb = commit_based_placement(target, pair_counts, commit_files)
+    print("commit_based_placement: ", cb)
 
 if __name__ == "__main__":
     # initial_analyze_coupling()
-    analyze_test_separated()
+    # analyze_test_separated()
+    test_placement_methods()
