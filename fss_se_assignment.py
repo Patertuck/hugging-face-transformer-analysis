@@ -390,7 +390,11 @@ def analyze_test_separated(filepath, top_n):
     plt.show()
 
 
-def test_placement_methods(filepath):
+def run_test_placement_methods(filepath):
+    if not os.path.isdir("tests"):
+        print("\033[91m⚠️  WARNING: 'tests' directory not found — name-based placement disabled.\033[0m")
+        return
+
     with open(filepath, "r") as f:
         lines = [line.strip() for line in f if line.strip()]
 
@@ -470,4 +474,4 @@ if __name__ == "__main__":
 
     initial_analyze_coupling(COMMIT_FILE, TOP_N_PAIRS)
     analyze_test_separated(COMMIT_FILE, TOP_N_PAIRS)
-    test_placement_methods(COMMIT_FILE)
+    run_test_placement_methods(COMMIT_FILE)
