@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import os
 from itertools import combinations
 import networkx as nx
+from radon.raw import analyze
 
 STOPWORDS = set(ENGLISH_STOP_WORDS)
 FILEPATH = "commits_after_2023.txt"
@@ -22,6 +23,13 @@ COMMIT_HASH_LENGTH = 40
 NODE_SIZE = 250
 FONT_SIZE = 5
 
+def warn_missing(path, context, is_dir=False):
+    exists = os.path.isdir(path) if is_dir else os.path.isfile(path)
+    if not exists:
+        kind = "directory" if is_dir else "file"
+        print(f"\033[91m⚠️  WARNING: '{path}' {kind} not found — {context}.\033[0m")
+        return True
+    return False
 
 def pretty_print_keywords(counts):
     print("\n=== Top Keywords in Commit Messages ===")
@@ -44,6 +52,9 @@ def pretty_print_defects(defects_per_month):
 
 
 def analyse_for_keywords():
+    if warn_missing(FILEPATH, "keyword analysis skipped"):
+        return []
+
     tokens = []
     cleaner = re.compile(r"[^\w\s-]")
 
@@ -69,6 +80,9 @@ def analyse_for_keywords():
 
 
 def count_defects_per_month(filepath, defect_keywords):
+    if warn_missing(filepath, "defect-per-month count skipped"):
+        return Counter()
+
     defects_per_month = Counter()
 
     with open(filepath, "r", encoding="utf-16") as f:
@@ -104,11 +118,10 @@ def plot_defects_per_month(defects_per_month):
 
 
 def loc_sloc_analysis_transformers():
-    import os
-    from radon.raw import analyze
+    if warn_missing("src", "cannot compute LoC/SLoC", is_dir=True):
+        return
 
     results = []
-
     for dirpath, _, filenames in os.walk("src"):
         for fn in filenames:
             if fn.endswith(".py"):
@@ -132,6 +145,8 @@ def loc_sloc_analysis_transformers():
 
 
 def count_defects_per_file_per_month(filepath, defect_keywords):
+    if warn_missing(filepath, "defect-per-file analysis skipped"):
+        return Counter(), defaultdict(Counter)
     file_defect_counts = Counter()
     per_file_month_counts = defaultdict(Counter)
 
@@ -203,6 +218,8 @@ def plot_top2_files_defects_per_month(filepath, defect_keywords):
 
 
 def iter_commits(filepath):
+    if warn_missing(filepath, "commit iteration skipped"):
+        return
     date_str = message = None
     files = []
 
@@ -289,6 +306,9 @@ def anaylze_NCC():
 
 
 def read_loc_file(path):
+    if warn_missing(path, "SLoC/LoC analysis skipped"):
+        return []
+
     rows = []
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
@@ -341,6 +361,9 @@ def analyze_SLoC_LoC():
 
 
 def initial_analyze_coupling(filepath, top_n):
+    if warn_missing(filepath, "logical coupling analysis skipped"):
+        return
+
     with open(filepath, "r") as f:
         lines = [line.strip() for line in f if line.strip()]
 
@@ -376,6 +399,9 @@ def initial_analyze_coupling(filepath, top_n):
 
 
 def analyze_test_separated(filepath, top_n):
+    if warn_missing(filepath, "test/source coupling analysis skipped"):
+        return
+
     with open(filepath, "r") as f:
         lines = [line.strip() for line in f if line.strip()]
 
@@ -419,6 +445,9 @@ def analyze_test_separated(filepath, top_n):
 
 
 def run_test_placement_methods(filepath):
+    if warn_missing(filepath, "commit-based placement skipped"):
+        return
+
     if not os.path.isdir("tests"):
         print("\033[91m⚠️  WARNING: 'tests' directory not found — name-based placement disabled.\033[0m")
         return

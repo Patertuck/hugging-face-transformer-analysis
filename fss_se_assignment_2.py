@@ -5,6 +5,7 @@ import matplotlib
 
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
+from radon.raw import analyze
 
 FILEPATH = "commits_after_2023.txt"
 LOC_SLOC_INPUT_FILE = "loc_sloc_src.txt"
@@ -13,9 +14,6 @@ COMMIT_LINE = re.compile(r"^[0-9a-f]{40}\t")
 
 
 def loc_sloc_analysis_transformers():
-    import os
-    from radon.raw import analyze
-
     results = []
 
     for dirpath, _, filenames in os.walk("src"):
