@@ -119,7 +119,6 @@ The sustained activity indicates that these modules act as evolution bottlenecks
 ### SLoC Complexity Analysis
 
 #### SLoC Hotspots (Structural Code Volume)
-### Supporting Code for SLoC Extraction
 
 To compute the SLoC (Source Lines of Code) metric used in our structural complexity analysis, we wrote a helper script that is documented in the unused method `loc_sloc_analysis_transformers`.
 
@@ -295,14 +294,14 @@ This result is also reasonable. Historically, multiple generation-related utilit
 
 ## Usage of AI
 
-We used AI tools (ChatGPT) to support a few focused, non-substantive parts of this assignment. Specifically, AI assistance was used to:
+We used AI tools to support a few focused, non-substantive parts of this assignment. Specifically, AI assistance was used to:
 
 - Create the command for getting the git logs
 - Improve the formatting and wording of this README for clarity and readability.  
-- Refine console output (“pretty prints”) for Task 1 to make results easier to interpret.  
+- Refine console output (“pretty prints”) to make results easier to interpret.  
 - Help create regular expressions used in the analysis.  
-- Assist with Matplotlib plotting code for Task 1.
+- Assist with Matplotlib plotting code.
 
-All analytical decisions, interpretations of results, and final write-ups for Tasks 1–3 were produced by the authors.
+All analytical decisions, interpretations of results, and final write-ups were produced by the authors.
 
 
