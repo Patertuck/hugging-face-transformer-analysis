@@ -2,12 +2,12 @@ import re
 from collections import Counter, defaultdict
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 import matplotlib
+
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 import os
 from itertools import combinations
 import networkx as nx
-
 
 STOPWORDS = set(ENGLISH_STOP_WORDS)
 FILEPATH = "commits_after_2023.txt"
@@ -102,37 +102,38 @@ def plot_defects_per_month(defects_per_month):
     plt.tight_layout()
     plt.show()
 
-    def loc_sloc_analysis_transformers():
-       import os
-       from radon.raw import analyze
 
-       results = []
+def loc_sloc_analysis_transformers():
+    import os
+    from radon.raw import analyze
 
-       for dirpath, _, filenames in os.walk("src"):
-           for fn in filenames:
-               if fn.endswith(".py"):
-                   path = os.path.join(dirpath, fn)
+    results = []
 
-                   try:
-                       with open(path, "r", encoding="utf-8", errors="replace") as f:
-                           content = f.read()
-                   except Exception:
-                       continue
+    for dirpath, _, filenames in os.walk("src"):
+        for fn in filenames:
+            if fn.endswith(".py"):
+                path = os.path.join(dirpath, fn)
 
-                   raw = analyze(content)
-                   loc, sloc = raw.loc, raw.sloc
-                   results.append((loc, sloc, path))
+                try:
+                    with open(path, "r", encoding="utf-8", errors="replace") as f:
+                        content = f.read()
+                except Exception:
+                    continue
 
-       results.sort(key=lambda x: x[0], reverse=True)
+                raw = analyze(content)
+                loc, sloc = raw.loc, raw.sloc
+                results.append((loc, sloc, path))
 
-       with open("loc_sloc_src.txt", "w", encoding="utf-8") as f:
-           for loc, sloc, path in results:
-               f.write(f"{loc} | {sloc} | {path}\n")
+    results.sort(key=lambda x: x[0], reverse=True)
+
+    with open("loc_sloc_src.txt", "w", encoding="utf-8") as f:
+        for loc, sloc, path in results:
+            f.write(f"{loc} | {sloc} | {path}\n")
+
 
 def count_defects_per_file_per_month(filepath, defect_keywords):
     file_defect_counts = Counter()
     per_file_month_counts = defaultdict(Counter)
-
 
     def iter_commits():
         date_str = message = None

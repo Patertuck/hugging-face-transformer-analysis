@@ -13,31 +13,31 @@ COMMIT_LINE = re.compile(r"^[0-9a-f]{40}\t")
 
 
 def loc_sloc_analysis_transformers():
-   import os
-   from radon.raw import analyze
+    import os
+    from radon.raw import analyze
 
-   results = []
+    results = []
 
-   for dirpath, _, filenames in os.walk("src"):
-       for fn in filenames:
-           if fn.endswith(".py"):
-               path = os.path.join(dirpath, fn)
+    for dirpath, _, filenames in os.walk("src"):
+        for fn in filenames:
+            if fn.endswith(".py"):
+                path = os.path.join(dirpath, fn)
 
-               try:
-                   with open(path, "r", encoding="utf-8", errors="replace") as f:
-                       content = f.read()
-               except Exception:
-                   continue
+                try:
+                    with open(path, "r", encoding="utf-8", errors="replace") as f:
+                        content = f.read()
+                except Exception:
+                    continue
 
-               raw = analyze(content)
-               loc, sloc = raw.loc, raw.sloc
-               results.append((loc, sloc, path))
+                raw = analyze(content)
+                loc, sloc = raw.loc, raw.sloc
+                results.append((loc, sloc, path))
 
-   results.sort(key=lambda x: x[0], reverse=True)
+    results.sort(key=lambda x: x[0], reverse=True)
 
-   with open("loc_sloc_src.txt", "w", encoding="utf-8") as f:
-       for loc, sloc, path in results:
-           f.write(f"{loc} | {sloc} | {path}\n")
+    with open("loc_sloc_src.txt", "w", encoding="utf-8") as f:
+        for loc, sloc, path in results:
+            f.write(f"{loc} | {sloc} | {path}\n")
 
 
 def iter_commits(filepath):
