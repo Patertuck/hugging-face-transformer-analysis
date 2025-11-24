@@ -9,8 +9,35 @@ import matplotlib.pyplot as plt
 FILEPATH = "commits_after_2023.txt"
 LOC_SLOC_INPUT_FILE = "loc_sloc_src.txt"
 
-
 COMMIT_LINE = re.compile(r"^[0-9a-f]{40}\t")
+
+
+def loc_sloc_analysis_transformers():
+   import os
+   from radon.raw import analyze
+
+   results = []
+
+   for dirpath, _, filenames in os.walk("src"):
+       for fn in filenames:
+           if fn.endswith(".py"):
+               path = os.path.join(dirpath, fn)
+
+               try:
+                   with open(path, "r", encoding="utf-8", errors="replace") as f:
+                       content = f.read()
+               except Exception:
+                   continue
+
+               raw = analyze(content)
+               loc, sloc = raw.loc, raw.sloc
+               results.append((loc, sloc, path))
+
+   results.sort(key=lambda x: x[0], reverse=True)
+
+   with open("loc_sloc_src.txt", "w", encoding="utf-8") as f:
+       for loc, sloc, path in results:
+           f.write(f"{loc} | {sloc} | {path}\n")
 
 
 def iter_commits(filepath):
@@ -99,7 +126,6 @@ def anaylze_NCC():
 
     plot_top_ncc_files(ncc_counts, 20)
     plot_top_ncc_files_per_month(ncc_counts, per_file_month_counts, 5)
-
 
 
 def read_loc_file(path):

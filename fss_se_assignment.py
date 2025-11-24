@@ -102,10 +102,37 @@ def plot_defects_per_month(defects_per_month):
     plt.tight_layout()
     plt.show()
 
+    def loc_sloc_analysis_transformers():
+       import os
+       from radon.raw import analyze
+
+       results = []
+
+       for dirpath, _, filenames in os.walk("src"):
+           for fn in filenames:
+               if fn.endswith(".py"):
+                   path = os.path.join(dirpath, fn)
+
+                   try:
+                       with open(path, "r", encoding="utf-8", errors="replace") as f:
+                           content = f.read()
+                   except Exception:
+                       continue
+
+                   raw = analyze(content)
+                   loc, sloc = raw.loc, raw.sloc
+                   results.append((loc, sloc, path))
+
+       results.sort(key=lambda x: x[0], reverse=True)
+
+       with open("loc_sloc_src.txt", "w", encoding="utf-8") as f:
+           for loc, sloc, path in results:
+               f.write(f"{loc} | {sloc} | {path}\n")
 
 def count_defects_per_file_per_month(filepath, defect_keywords):
     file_defect_counts = Counter()
     per_file_month_counts = defaultdict(Counter)
+
 
     def iter_commits():
         date_str = message = None

@@ -119,6 +119,11 @@ The sustained activity indicates that these modules act as evolution bottlenecks
 ### SLoC Complexity Analysis
 
 #### SLoC Hotspots (Structural Code Volume)
+### Supporting Code for SLoC Extraction
+
+To compute the SLoC (Source Lines of Code) metric used in our structural complexity analysis, we wrote a helper script that is documented in the unused method `loc_sloc_analysis_transformers`.
+
+This script uses the `radon` library to scan the `src/` directory of the transformer-repository and write the results to a file named `loc_sloc_src.txt`. These values were then used to generate the SLoC plots shown in the report.
 
 ![alt defects per month per file top 2](figures/SLoC_with_LoC_Background_top_25.png)
 
