@@ -1,7 +1,10 @@
-# Hugging Face Transformer Analysis
-#### Fundamentals of Software Systems: Software Evolution Part I, Assignment
+# Hugging Face Transformers Analysis
 
-> We would like to note that our third team member became unresponsive and ultimately left the group. We apologize for the reduced group participation. The remaining members completed the assignment independently. 
+> **Status:** This repository is archived and no longer actively maintained.
+
+This project was completed as part of the master's module *Fundamentals of Software Systems: Software Evolution* at the University of Zurich.
+
+It provides a detailed analysis of defect trends, complexity hotspots, and logical coupling in the Hugging Face Transformers repository.
 
 ### Students
 - Patric Brandao 21-534-607
